@@ -15,7 +15,7 @@ slices_num = 113;
 
 % Load all images, the dimension of V is
 % 512 by 512 by 113
-V = load_volume('spiral_CT_mandible', slices_num);
+V = load_volume('dicom_folder', slices_num);
 
 %% Maximum Intensity Projection
 % Compute MIP in three different views
