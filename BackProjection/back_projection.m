@@ -1,26 +1,26 @@
-%% Implementation Image Reconstruction
-%
-% In this script, CT image is reconstructed by
-% the method of back projection.
-%
-% Created by Qixun QU
-% 2017/04/19
+function img_bp = back_projection(sg, N, angle)
+%%BACK_PROJECTION Implement the back projection approach to reconstruct
+%image from given sinogram.
+%   Input argument:
+%   - sg : the known sinogram
+%   - N : the number of projections used in construction,
+%         default is the number of columns of sinogram
+%   - angle : back projection of one data in sinogram at given angle
+%   Output:
+%   - img_bp : the reconstruction result
 
-%% Clearn Environment
-clc
-clear
-close all
+% Set the default value for the number of
+% projection that applied to reconstruct
+if nargin < 2 || isempty(N)
+    N = size(sg, 2);
+end
 
-%% Load Data
-load data.mat
-load data2.mat
-
-% In this case, g and g2 are sinogram data,
-% they are n by 180 matrix, which means in
-% g(l, theta), the range of theta is from 1
-% to 180, in each degree, l has n values
-sg = g2;
-%sg = g;
+% Set the default value of angle
+if nargin < 3 || isempty(angle)
+    angle = -1;
+else
+    N = length(angle);
+end
 
 % Obtain the size of sinogram and compute the
 % size of reconstructed image
@@ -30,22 +30,28 @@ hfgl = floor(gl / 2);
 iw = 2 * floor(gl / (2 * sqrt(2)));
 hfiw = iw / 2;
 
-%% Setting
-% Number of back projection
-N = 180;
-
-%% Back Projection
+% Back Projection
 % Initialize the reconstructed image
 img_bp = zeros(iw);
 
 % Compute some arguments for back projection
 % Positions map of reconstructed image
 [posX, posY] = meshgrid((1:iw) - hfiw);
-% The degree interval
-igt = floor(gt / N);
+
+if angle == -1
+    % If back projection is generated from
+    % several data in sinogram
+    % Calculate the degree interval
+    igt = floor(gt / N);
+    angles_array = 1:igt:gt;
+else
+    % If back projection is created only by
+    % one data in sinogram at given angle
+    angles_array = angle;
+end
 
 % Run N times back projection 
-for t = 1:igt:gt
+for t = angles_array
 
     % Calculate the position in sinogram
     pos = posX * cosd(t) + posY * sind(t) + hfgl;
@@ -55,16 +61,13 @@ for t = 1:igt:gt
 end
 
 % Multiply the factor
-img_bp_f = img_bp * (pi / (2 * N));
+img_bp = img_bp * (pi / (2 * N));
 
-%% Plot results
-% Plot back projection result
+% Plot results
+% Plot back projection result that
+% multiplies the factor
 figure
 imagesc(img_bp), colormap gray
 axis('off')
 
-% Plot back projection result that
-% multiplies the factor
-figure
-imagesc(img_bp_f), colormap gray
-axis('off')
+end

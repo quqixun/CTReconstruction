@@ -1,26 +1,33 @@
-%% Implementation Image Reconstruction
-%
-% In this script, CT image is reconstructed by
-% the method of convolution back projection.
-%
-% Created by Qixun QU
-% 2017/04/19
+function img_cbp = convolution_back_projection(sg, N, filter, angle)
+%%CONVOLUTION_BACK_PROJECTION Implement the convolution back projection
+%approach to reconstruct image from given sinogram.
+%   Input argument:
+%   - sg : the known sinogram
+%   - filter : the name of the filter used to filter the projection,
+%     default is 'hamming'
+%   - N : the number of projections used in construction,
+%         default is the number of columns of sinogram
+%   - angle : back projection of one data in sinogram at given angle
+%   Output:
+%   - img_bp : the reconstruction result
 
-%% Clearn Environment
-clc
-clear
-close all
+% Set the default value for the number of
+% projection that applied to reconstruct
+if nargin < 2 || isempty(N)
+    N = size(sg, 2);
+end
 
-%% Load Data
-load data.mat
-load data2.mat
+% Set the default value of filter
+if nargin < 3 || isempty(filter)
+    filter = 'hamming';
+end
 
-% In this case, g and g2 are sinogram data,
-% they are n by 180 matrix, which means in
-% g(l, theta), the range of theta is from 1
-% to 180, in each degree, l has n values
-%sg = g2;
-sg = g;
+% Set the default value of angle
+if nargin < 4 || isempty(angle)
+    angle = -1;
+else
+    N = length(angle);
+end
 
 % Obtain the size of sinogram and compute the
 % size of reconstructed image
@@ -30,16 +37,8 @@ hfgl = floor(gl / 2);
 iw = 2 * floor(gl / (2 * sqrt(2)));
 hfiw = iw / 2;
 
-%% Settings
-% method:
-% 0 for ramlak, 1 for hamming
-method = 1;
-
-% The number of back projection
-N = 180;
-
-%% Convolution Back Projection
-% Compute the Ramlak filter
+% Convolution Back Projection
+% Compute the Ram-Lak filter
 gx = [0:hfgl, hfgl - 1:-1:1];
 if mod(gl, 2) ~= 0
     gx = [gx, 0];
@@ -47,15 +46,15 @@ end
 
 ramlak = 2 * gx / gl;
 
-switch method
+switch filter
 
-    case 0 % Use Ramlak filter
+    case 'ramlak' % Use Ramlak filter
         H = ramlak;
-    case 1 % Use Hamming filter
+    case 'hamming' % Use Hamming filter
         hamming = 0.54 - 0.46 * cos(2 * pi * (0:gl-1) / gl);
         H = [hamming(hfgl:gl), hamming(1:hfgl-1)] .* ramlak;
     otherwise
-        fprintf('Wrong method, it should be 0 or 1.')
+        fprintf('Wrong filter, it should be ''ramlak'' or ''hamming''.')
 
 end
 
@@ -65,35 +64,41 @@ c = real(ifftshift(ifft(H)));
 sgc = convn(sg, c', 'same');
 
 % Initialize the reconstructed image
-img_fbp = zeros(iw);
+img_cbp = zeros(iw);
 
 % Compute some arguments for back projection
 % Positions map of reconstructed image
 [posX, posY] = meshgrid((1:iw) - hfiw);
-% The degree interval
-igt = floor(gt / N);
+
+if angle == -1
+    % If back projection is generated from
+    % several data in sinogram
+    % Calculate the degree interval
+    igt = floor(gt / N);
+    angles_array = 1:igt:gt;
+else
+    % If back projection is created only by
+    % one data in sinogram at given angle
+    angles_array = angle;
+end
 
 % Run N times back projection
-for t = 1:igt:gt
+for t = angles_array
     
     % Calculate the position in sinogram
     pos = posX * cosd(t) + posY * sind(t) + hfgl;
     % Accumulate projection of each degree sinogram
-    img_fbp = img_fbp + interp1(1:gl, sgc(:, t), pos);
+    img_cbp = img_cbp + interp1(1:gl, sgc(:, t), pos);
     
 end
 
 % Multiply the factor
-img_fbp_f = img_fbp * (pi / (2 * N));
+img_cbp = img_cbp * (pi / (2 * N));
 
-%% Plot results
+% Plot results
 % Plot back projection result
 figure
-imagesc(img_fbp), colormap gray
+imagesc(img_cbp), colormap gray
 axis('off')
 
-% Plot back projection result that
-% multiplies the factor
-figure
-imagesc(img_fbp_f), colormap gray
-axis('off')
+end
