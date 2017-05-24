@@ -1,8 +1,8 @@
 function mip = MIP(V, view)
 %%MIP Compute maximum intensity projection in given view.
-%   three possible inputs of view:
-%   'axial'(defaule), 'sagittal', 'coronal'
-%   V is the volumn data
+%   'V' is the volumn data.
+%   Three possible inputs of 'view':
+%   'axial'(defaule), 'sagittal', 'coronal'.
 
 % Set default argument
 if nargin < 2

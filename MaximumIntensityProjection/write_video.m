@@ -1,7 +1,9 @@
 function write_video( views, name, sec )
 %%WRITE_VIDEO Write all view images into a video.
-%   The 3rd dimension of 'views' indicates the nymber
-%   of views. sec is the the length of video in seconds.
+%   The 3rd dimension of 'views' indicates the number
+%   of views.
+%   'name' is the file name of the video.
+%   'sec' is the the length of video in seconds.
 
 % Set default length for video file
 if nargin < 3 || isempty(sec)
@@ -26,6 +28,17 @@ for i = 1 : size(views, 3)
     % Normalize the view
     f = image_normalize(views(:, :, i));
     writeVideo(mip_video, f);
+    
+    % Method to write gif file
+%     [A,map] = gray2ind(f,256);
+%     delay = 1 / mip_video.FrameRate;
+%     if i == 1
+%         imwrite(A, map, 'mip_360.gif', 'gif',...
+%                 'LoopCount', Inf, 'DelayTime', delay);
+%     elseif mod(i, 10) == 0
+%         imwrite(A, map, 'mip_360.gif', 'gif',...
+%                 'WriteMode', 'append', 'DelayTime', delay);
+%     end
 
 end
 
